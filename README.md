@@ -1,4 +1,4 @@
-# ytmsd - YouTube Music Scraper and Downloader
+# yt-msd - YouTube Music Scraper and Downloader
 
 ytmsd is a command-line tool for downloading audio from YouTube or YouTube Music videos or playlists and applying metadata from sources like YouTube Music, MusicBrainz, iTunes, or YouTube's default metadata. It supports single tracks, playlists, and batch processing via CSV files, with options for metadata source selection, cover art downloading, and automatic thumbnail cropping.
 
