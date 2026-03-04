@@ -13,6 +13,9 @@ ytmsd is a command-line tool for downloading audio from YouTube or YouTube Music
 - Automatically crops YouTube thumbnails to square 600x600 images using FFmpeg, while preserving YouTube Music thumbnails.
 - Configurable metadata sources via an interactive settings menu.
 - Supports batch processing with CSV files (format: `download_url,metadata_url,meta_source`).
+- Multi-link processing with selectable mode: `--mode sequential` (default) or `--mode parallel` for concurrent downloads. In parallel mode, playlist tracks download simultaneously with worker-pool queuing.
+- Playlist output folder: `{playlist_title}-{uploader}` (e.g. `My_Playlist-ChannelName`).
+- Configurable output directory via `--output` or `-o`.
 - Command-line flag `--meta` to force a specific metadata source (`yt`, `ytm`, `it`, `mb`).
 - Command-line flag `--meta_link` to specify a metadata URL.
 - 10-second countdown for user selection of metadata results, with automatic fallback to YouTube metadata if no input is provided.
@@ -24,6 +27,7 @@ ytmsd is a command-line tool for downloading audio from YouTube or YouTube Music
 ### Prerequisites
 - Python 3.6 or higher
 - yt-dlp: `pip install yt-dlp`
+- colorama (for colored output): `pip install colorama`
 - FFmpeg (optional, for metadata tagging and cover art cropping): Install via package manager or download from [FFmpeg website](https://ffmpeg.org/download.html)
 
 ### Setup
@@ -34,7 +38,7 @@ ytmsd is a command-line tool for downloading audio from YouTube or YouTube Music
    ```
 2. Ensure dependencies are installed:
    ```bash
-   pip install yt-dlp
+   pip install yt-dlp colorama
    ```
 3. Verify FFmpeg is in your PATH (optional but recommended):
    ```bash
@@ -76,7 +80,7 @@ pyinstaller --onefile --add-data "path_to_ffmpeg;ffmpeg" --hidden-import yt_dlp 
 Run the script with a YouTube or YouTube Music URL, playlist, or CSV file:
 
 ```bash
-python ytmsd.py [download_url_or_csv] [--meta yt|ytm|it|mb] [--meta_link link] [--debug]
+python ytmsd.py [download_url_or_csv] [--meta yt|ytm|it|mb] [--meta_link link] [--output DIR] [--mode sequential|parallel] [--debug] [--no-search-retry]
 ```
 
 ### Examples
@@ -104,6 +108,14 @@ python ytmsd.py [download_url_or_csv] [--meta yt|ytm|it|mb] [--meta_link link] [
   ```bash
   python ytmsd.py tracks.csv
   ```
+- Process in parallel (faster for playlists/CSV, no interactive prompts):
+  ```bash
+  python ytmsd.py tracks.csv --mode parallel
+  ```
+- Specify output directory:
+  ```bash
+  python ytmsd.py https://youtube.com/playlist?list=... --output ./downloads
+  ```
 - Configure metadata sources:
   ```bash
   python ytmsd.py --settings
@@ -122,10 +134,23 @@ https://music.youtube.com/watch?v=another_id,https://music.youtube.com/watch?v=q
 ```
 
 ### Options
-- `--meta yt|ytm|it|mb`: Force metadata from YouTube (`yt`), YouTube Music (`ytm`), iTunes (`it`), or MusicBrainz (`mb`).
-- `--meta_link [link]`: Specify a metadata URL to fetch metadata directly.
-- `--debug`: Enable detailed error output for troubleshooting.
-- `--settings`: Open interactive menu to toggle metadata sources.
+- `--meta`, `-m yt|ytm|it|mb`: Force metadata from YouTube (`yt`), YouTube Music (`ytm`), iTunes (`it`), or MusicBrainz (`mb`).
+- `--meta_link`, `-l [link]`: Specify a metadata URL to fetch metadata directly.
+- `--output`, `-o DIR`: Output directory (default: current dir or playlist-named subdir).
+- `--mode`, `-M sequential|parallel`: Process multiple links sequentially (default) or in parallel. Parallel mode downloads all playlist tracks simultaneously with queuing.
+- `--jobs`, `-j N`: Max concurrent downloads in parallel mode (default: 8).
+- `--format`, `-f mp3|opus|m4a|flac`: Audio format (default: mp3).
+- `--quality`, `-q 0-9`: Audio quality for mp3 (0=best, 9=worst).
+- `--output-template`, `-t TPL`: Filename template; placeholders: `{artist}`, `{title}`, `{album}`, `{date}`.
+- `--no-cover`: Skip cover art download.
+- `--dry-run`: List what would be downloaded without downloading.
+- `--limit N`: For playlists: only process first N tracks.
+- `--skip-existing`: Skip tracks whose output file already exists.
+- `--timeout SEC`: Download timeout in seconds (default: 60).
+- `--max-filename-length N`: Truncate long filenames (default: 200).
+- `--debug`, `-d`: Enable detailed error output for troubleshooting.
+- `--no-search-retry`, `-n`: Reduce retries from 3 to 1 for searches and fetches.
+- `--settings`, `-s`: Open interactive menu to toggle metadata sources.
 
 ## Configuration
 The script stores configuration in `~/.ytmsd_config.json`. Use the `--settings` option to enable/disable metadata sources (YouTube Music, MusicBrainz, iTunes). By default, YouTube Music and MusicBrainz are enabled, and iTunes is disabled.
